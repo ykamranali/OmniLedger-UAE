@@ -15,7 +15,28 @@ export function Footer() {
             <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
               {appConfig.description}
             </p>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
+            <div className="space-y-1.5 pt-1 text-xs text-slate-600">
+              <div className="font-semibold text-slate-900">Contact & Head Office:</div>
+              <div className="text-slate-600">
+                <span className="font-medium text-slate-900">Kamran Ali</span> — {appConfig.officeAddress}, UAE
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <a
+                  href={`tel:${appConfig.contactPhone.replace(/\s+/g, "")}`}
+                  className="font-bold text-emerald-700 hover:text-emerald-800"
+                >
+                  {appConfig.contactPhone}
+                </a>
+                <span className="text-slate-300">|</span>
+                <a
+                  href={`mailto:${appConfig.supportEmail}`}
+                  className="font-medium text-blue-700 hover:text-blue-800 font-mono"
+                >
+                  {appConfig.supportEmail}
+                </a>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 pt-1">
               <ShieldCheck className="h-4 w-4 text-emerald-600" />
               <span>Designed strictly for UAE Ministry of Finance E-Invoicing</span>
             </div>

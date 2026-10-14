@@ -168,12 +168,12 @@ export function AppShell({ children }: AppShellProps) {
             <div className="h-5 w-px bg-slate-200 mx-1"></div>
 
             <div className="flex items-center gap-2.5 text-xs">
-              <div className="h-8 w-8 rounded-full bg-blue-100 text-[#0F2B5C] border border-blue-200 flex items-center justify-center font-extrabold text-xs">
-                TC
+              <div className="h-8 w-8 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center justify-center font-extrabold text-xs">
+                KA
               </div>
               <div className="hidden sm:block text-left">
-                <div className="font-bold text-slate-900 text-xs leading-tight">Tariq Controller</div>
-                <div className="text-[10px] text-slate-500 font-medium leading-tight">Financial Controller</div>
+                <div className="font-bold text-slate-900 text-xs leading-tight">Kamran Ali</div>
+                <div className="text-[10px] text-slate-500 font-medium leading-tight font-mono">kamran.a@ramtechuae.com</div>
               </div>
             </div>
           </div>

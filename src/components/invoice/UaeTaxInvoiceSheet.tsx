@@ -152,38 +152,38 @@ export function UaeTaxInvoiceSheet({ invoice }: UaeTaxInvoiceSheetProps) {
           {/* Left: Supplier Letterhead & Verified TRN */}
           <div className="space-y-2">
             <div className="flex items-center gap-3.5">
-              <div className="h-13 w-13 rounded-xl bg-linear-to-br from-[#0F2B5C] to-[#1E3A8A] text-white flex items-center justify-center font-black text-xl shadow-md border border-blue-900 shrink-0">
-                <span>AN</span>
+              <div className="h-13 w-13 rounded-xl bg-gradient-to-br from-[#0F2B5C] to-[#1E3A8A] text-white flex items-center justify-center font-black text-xl shadow-md border border-blue-900 shrink-0">
+                <span>RT</span>
               </div>
               <div>
                 <h1 className="text-xl font-black text-slate-950 tracking-tight leading-tight">
-                  Al-Noor Technologies FZCO
+                  Ramtech Technologies LLC
                 </h1>
                 <p className="text-sm font-bold text-slate-700 font-arabic leading-snug">
-                  شركة النور للتقنية ش.م.ح
+                  شركة رام تك للتقنية ذ.م.م
                 </p>
                 <p className="text-[10px] uppercase font-bold tracking-wider text-blue-900">
-                  UAE Commercial License No: DSO-FZCO-88912
+                  UAE Commercial License: AA-CN-88912
                 </p>
               </div>
             </div>
 
             <div className="text-xs text-slate-600 space-y-0.5 pt-1">
               <p className="font-semibold text-slate-800">
-                Dubai Silicon Oasis, Tech Hub Tower 2, Office 504
+                Abu Baker Al Siddiq St, Al Ain - Abu Dhabi
               </p>
               <p className="text-slate-600">
-                P.O. Box 341041, Dubai, United Arab Emirates
+                United Arab Emirates
               </p>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-500 pt-0.5">
                 <span className="inline-flex items-center gap-1 font-medium">
-                  <Phone className="h-3 w-3 text-slate-400" /> +971 4 398 7654
+                  <Phone className="h-3 w-3 text-slate-400" /> +971 56 450 4650
                 </span>
                 <span className="inline-flex items-center gap-1 font-medium">
-                  <Mail className="h-3 w-3 text-slate-400" /> billing@alnoor-tech.ae
+                  <Mail className="h-3 w-3 text-slate-400" /> kamran.a@ramtechuae.com
                 </span>
                 <span className="inline-flex items-center gap-1 font-medium">
-                  <Globe className="h-3 w-3 text-slate-400" /> www.alnoor-tech.ae
+                  <Globe className="h-3 w-3 text-slate-400" /> omniledger-uae.netlify.app
                 </span>
               </div>
             </div>

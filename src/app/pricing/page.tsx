@@ -126,9 +126,9 @@ export default function PricingPage() {
           </div>
           <Link
             href="/contact"
-            className="shrink-0 px-4 py-2 text-xs font-bold rounded-xl bg-white border border-blue-300 text-blue-900 hover:bg-blue-50"
+            className="shrink-0 px-4 py-2 text-xs font-bold rounded-xl bg-white border border-blue-300 text-blue-900 hover:bg-blue-50 flex items-center gap-1.5"
           >
-            Consult Enterprise Advisor
+            <span>Consult Kamran Ali (+971 56 450 4650) &rarr;</span>
           </Link>
         </div>
       </main>

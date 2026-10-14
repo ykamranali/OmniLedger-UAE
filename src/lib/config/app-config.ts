@@ -8,6 +8,11 @@ export interface AppConfig {
   description: string;
   supportEmail: string;
   salesEmail: string;
+  contactPerson: string;
+  contactPhone: string;
+  officeAddress: string;
+  city: string;
+  country: string;
   defaultCurrency: string;
   defaultTaxRatePercent: number;
   complianceVersion: string;
@@ -31,8 +36,13 @@ export const appConfig: AppConfig = {
   tagline: "The Modern General Ledger & UAE E-Invoicing Platform",
   description:
     "Enterprise-grade general ledger & UAE e-invoicing for SMEs, accounting firms, and enterprises. Fully aligned with UAE Ministry of Finance mandates and Peppol PINT AE standards.",
-  supportEmail: "support@omniledger.ae",
-  salesEmail: "sales@omniledger.ae",
+  supportEmail: "kamran.a@ramtechuae.com",
+  salesEmail: "kamran.a@ramtechuae.com",
+  contactPerson: "Kamran Ali",
+  contactPhone: "+971 56 450 4650",
+  officeAddress: "Abu Baker Al Siddiq St, Al Ain - Abu Dhabi",
+  city: "Al Ain - Abu Dhabi",
+  country: "United Arab Emirates",
   defaultCurrency: process.env.DEFAULT_CURRENCY || "AED",
   defaultTaxRatePercent: 5.0,
   complianceVersion: process.env.COMPLIANCE_VERSION || "PINT-AE-1.0",
