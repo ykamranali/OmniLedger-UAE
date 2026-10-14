@@ -22,13 +22,13 @@ export default function DevelopersPage() {
         <div className="max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-brand-50 text-brand-800 border border-brand-200 text-xs font-semibold">
             <Terminal className="h-3.5 w-3.5" />
-            <span>OmniInvoice REST API v1 & Webhooks</span>
+            <span>OmniLedger REST API v1 & Webhooks</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
             Developer Documentation & API Reference
           </h1>
           <p className="text-slate-600 text-base leading-relaxed">
-            Integrate your ERP, CRM, or POS system with OmniInvoice UAE. Create invoices, trigger Peppol PINT AE validation, and receive asynchronous delivery callbacks.
+            Integrate your ERP, CRM, or POS system with OmniLedger UAE. Create invoices, trigger Peppol PINT AE validation, and receive asynchronous delivery callbacks.
           </p>
         </div>
 

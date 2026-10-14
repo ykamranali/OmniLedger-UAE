@@ -61,7 +61,7 @@ export default function SecurityPage() {
             Enterprise Security & UAE Compliance Standards
           </h1>
           <p className="text-slate-600 text-lg">
-            OmniInvoice UAE implements bank-grade security protocols to protect confidential commercial transactions and financial records.
+            OmniLedger UAE implements bank-grade security protocols to protect confidential commercial transactions and financial records.
           </p>
         </div>
 

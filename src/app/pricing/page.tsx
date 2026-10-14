@@ -121,7 +121,7 @@ export default function PricingPage() {
               Do I need a separate subscription for each UAE trade license?
             </h4>
             <p className="text-xs text-slate-700 font-medium max-w-2xl">
-              OmniInvoice UAE supports multi-entity management within single customer tenants. Starter includes 1 company; Business includes 2; Professional includes 5; and Accounting Firm plans support up to 25 distinct client entities.
+              OmniLedger UAE supports multi-entity management within single customer tenants. Starter includes 1 company; Business includes 2; Professional includes 5; and Accounting Firm plans support up to 25 distinct client entities.
             </p>
           </div>
           <Link

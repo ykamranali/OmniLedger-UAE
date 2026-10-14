@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { appConfig } from "@/lib/config/app-config";
+import { OmniLedgerLogo } from "@/components/brand/OmniLedgerLogo";
 import { invoicingStore } from "@/lib/store/invoicing-store";
 import {
   FileCheck2,
@@ -60,18 +61,8 @@ export function AppShell({ children }: AppShellProps) {
         <div>
           {/* Brand Header */}
           <div className="h-16 border-b border-slate-200/90 px-5 flex items-center justify-between bg-white">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0F2B5C] text-white shadow-md shadow-blue-950/20 group-hover:scale-105 transition-transform">
-                <FileCheck2 className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="font-extrabold text-slate-900 tracking-tight text-sm">
-                  {appConfig.shortName}
-                </span>
-                <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                  UAE
-                </span>
-              </div>
+            <Link href="/" className="group">
+              <OmniLedgerLogo size="sm" showSubtitle={false} />
             </Link>
           </div>
 

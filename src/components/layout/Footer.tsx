@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { appConfig } from "@/lib/config/app-config";
+import { OmniLedgerLogo } from "@/components/brand/OmniLedgerLogo";
 import { FileCheck2, ShieldCheck, Lock, ExternalLink } from "lucide-react";
 
 export function Footer() {
@@ -10,14 +11,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand Info */}
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-900 text-white">
-                <FileCheck2 className="h-5 w-5" />
-              </div>
-              <span className="font-extrabold text-lg text-slate-900">
-                {appConfig.name}
-              </span>
-            </div>
+            <OmniLedgerLogo size="md" />
             <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
               {appConfig.description}
             </p>

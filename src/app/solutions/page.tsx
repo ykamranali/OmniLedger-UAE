@@ -77,7 +77,7 @@ export default function SolutionsPage() {
             Tailored E-Invoicing Solutions by Industry
           </h1>
           <p className="text-slate-600 text-lg">
-            Whether you operate a single Dubai mainland shop or manage tax compliance for 50 group entities, OmniInvoice UAE scales with you.
+            Whether you operate a single Dubai mainland shop or manage tax compliance for 50 group entities, OmniLedger UAE scales with you.
           </p>
         </div>
 

@@ -71,7 +71,7 @@ export default function UaeEInvoicingPage() {
           <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-slate-900">
-                Official OmniInvoice UAE Compliance Register
+                Official OmniLedger UAE Compliance Register
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Audited against MoF Technical Specifications & Executive Regulations
@@ -134,13 +134,13 @@ export default function UaeEInvoicingPage() {
                 Is a standard PDF invoice compliant with the UAE mandate?
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
-                No. While human-readable PDFs remain essential for client delivery and bookkeeping, the legal standard requires structured UBL 2.1 XML exchanged between Accredited Service Providers. OmniInvoice generates both simultaneously.
+                No. While human-readable PDFs remain essential for client delivery and bookkeeping, the legal standard requires structured UBL 2.1 XML exchanged between Accredited Service Providers. OmniLedger generates both simultaneously.
               </p>
             </div>
 
             <div className="p-5 rounded-xl bg-white border border-slate-200 space-y-2">
               <h4 className="font-semibold text-slate-900 text-sm">
-                What is the difference between Model A and Model B in OmniInvoice?
+                What is the difference between Model A and Model B in OmniLedger?
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
                 Model A connects your company to an existing Accredited Service Provider (ASP) via our modular adapter. Model B lays the architectural foundation for direct access-point operation once all regulatory accreditations are achieved.

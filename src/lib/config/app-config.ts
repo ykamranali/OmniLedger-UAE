@@ -26,13 +26,13 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-  name: process.env.NEXT_PUBLIC_APP_NAME || "OmniInvoice UAE",
-  shortName: "OmniInvoice",
-  tagline: "Cloud-First UAE E-Invoicing & VAT Compliance SaaS",
+  name: process.env.NEXT_PUBLIC_APP_NAME || "OmniLedger UAE",
+  shortName: "OmniLedger",
+  tagline: "The Modern General Ledger & UAE E-Invoicing Platform",
   description:
-    "Production-grade e-invoicing for UAE SMEs, accounting firms, and enterprises. Fully aligned with UAE Ministry of Finance e-invoicing mandates and Peppol PINT AE standards.",
-  supportEmail: "support@omni-einvoice.ae",
-  salesEmail: "sales@omni-einvoice.ae",
+    "Enterprise-grade general ledger & UAE e-invoicing for SMEs, accounting firms, and enterprises. Fully aligned with UAE Ministry of Finance mandates and Peppol PINT AE standards.",
+  supportEmail: "support@omniledger.ae",
+  salesEmail: "sales@omniledger.ae",
   defaultCurrency: process.env.DEFAULT_CURRENCY || "AED",
   defaultTaxRatePercent: 5.0,
   complianceVersion: process.env.COMPLIANCE_VERSION || "PINT-AE-1.0",

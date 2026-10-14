@@ -602,7 +602,7 @@ export function UaeTaxInvoiceSheet({ invoice }: UaeTaxInvoiceSheetProps) {
           </div>
           <div className="text-[11px] text-slate-600">
             <span className="font-black text-slate-950 block">
-              OmniInvoice UAE DCTCE Certified
+              OmniLedger UAE DCTCE Certified
             </span>
             <span>Electronic signature & cryptographic tamper detection verified.</span>
           </div>

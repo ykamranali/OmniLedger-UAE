@@ -21,6 +21,8 @@ import {
   Zap,
 } from "lucide-react";
 
+import { OmniLedgerLogo } from "@/components/brand/OmniLedgerLogo";
+
 export default function AdminConsolePage() {
   const companies = invoicingStore.getCompanies();
   const invoices = invoicingStore.getInvoices();
@@ -32,19 +34,12 @@ export default function AdminConsolePage() {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col">
       {/* Top Admin Header */}
-      <header className="h-16 border-b border-slate-200 bg-slate-900 text-white px-6 flex items-center justify-between shadow-sm">
+      <header className="h-16 border-b border-slate-800 bg-slate-950 text-white px-6 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-white">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <span className="font-extrabold text-sm tracking-tight text-white">
-              {appConfig.shortName} Platform Administration
-            </span>
-            <span className="ml-2 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-brand-800 text-brand-200">
-              Super Admin Console
-            </span>
-          </div>
+          <OmniLedgerLogo size="sm" showSubtitle={false} theme="dark" />
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-900/60 text-blue-300 border border-blue-700/50">
+            Super Admin Console
+          </span>
         </div>
 
         <div className="flex items-center gap-4 text-xs">

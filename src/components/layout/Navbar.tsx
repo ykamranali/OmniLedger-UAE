@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { appConfig } from "@/lib/config/app-config";
+import { OmniLedgerLogo } from "@/components/brand/OmniLedgerLogo";
 import {
   FileCheck2,
   ShieldCheck,
@@ -29,21 +30,8 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/90 bg-white/95 backdrop-blur-md shadow-xs">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-[#0F2B5C] via-[#1E40AF] to-[#059669] shadow-md shadow-blue-950/20 text-white transition-all group-hover:scale-105 group-hover:shadow-lg">
-            <FileCheck2 className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="font-extrabold text-lg tracking-tight text-slate-900 flex items-center gap-1.5">
-              <span>{appConfig.shortName}</span>
-              <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                UAE
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-500 font-medium -mt-1 hidden sm:block">
-              Peppol PINT AE E-Invoicing Platform
-            </p>
-          </div>
+        <Link href="/" className="group">
+          <OmniLedgerLogo size="md" />
         </Link>
 
         {/* Desktop Navigation */}

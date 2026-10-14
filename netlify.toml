@@ -10,7 +10,7 @@
   NEXT_TELEMETRY_DISABLED = "1"
   COMPLIANCE_VERSION = "PINT-AE-2026-v1"
   ASP_ENVIRONMENT = "sandbox"
-  NEXT_PUBLIC_APP_NAME = "OmniInvoice UAE"
+  NEXT_PUBLIC_APP_NAME = "OmniLedger UAE"
 
 # Security & CORS Headers for UAE Financial Data
 [[headers]]
