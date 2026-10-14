@@ -95,3 +95,33 @@ h1, h2, h3, h4, h5, h6 {
   text-align: right;
   font-family: var(--font-arabic);
 }
+
+/* High Fidelity A4 Print Media Styles for Official UAE Invoices */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide headers, sidebars, modals wrappers */
+  header, nav, aside, footer, .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset container styles for printing */
+  #uae-tax-invoice-printable {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}

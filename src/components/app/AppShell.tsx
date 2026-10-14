@@ -56,7 +56,7 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans">
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-slate-200 bg-white flex flex-col justify-between shrink-0 shadow-sm z-30">
+      <aside className="w-64 border-r border-slate-200 bg-white flex flex-col justify-between shrink-0 shadow-sm z-30 print:hidden">
         <div>
           {/* Brand Header */}
           <div className="h-16 border-b border-slate-200/90 px-5 flex items-center justify-between bg-white">
@@ -151,9 +151,9 @@ export function AppShell({ children }: AppShellProps) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 print:block print:w-full print:p-0">
         {/* Top Navbar */}
-        <header className="h-16 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0 shadow-2xs">
+        <header className="h-16 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0 shadow-2xs print:hidden">
           <div className="flex items-center gap-4">
             <div className="relative hidden sm:block">
               <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-2.5" />
@@ -189,7 +189,7 @@ export function AppShell({ children }: AppShellProps) {
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-6 overflow-y-auto print:p-0 print:overflow-visible print:block">
           {children}
         </main>
       </div>

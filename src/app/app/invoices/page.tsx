@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app/AppShell";
 import { invoicingStore, InvoiceModel, CustomerModel, CompanyModel } from "@/lib/store/invoicing-store";
 import { calculateInvoiceTotals, UAE_TAX_CATEGORIES, TaxCategoryCode } from "@/lib/compliance/uae-tax-engine";
 import { generatePintAeXml } from "@/lib/compliance/pint-ae-generator";
+import { UaeTaxInvoiceSheet } from "@/components/invoice/UaeTaxInvoiceSheet";
 import {
   Receipt,
   Plus,
@@ -283,10 +284,10 @@ export default function InvoicesPage() {
 
         {/* INVOICE INSPECTOR MODAL / DRAWER */}
         {selectedInvoice && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm print:fixed print:inset-0 print:p-0 print:bg-white print:z-[9999] print:overflow-visible print:block">
+            <div className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 print:max-w-none print:max-h-none print:shadow-none print:rounded-none print:border-none print:overflow-visible">
               {/* Header */}
-              <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+              <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between print:hidden">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-[#0F2B5C] text-white flex items-center justify-center font-bold">
                     <Receipt className="h-5 w-5" />
@@ -312,7 +313,7 @@ export default function InvoicesPage() {
                         activeTab === "PREVIEW" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600"
                       }`}
                     >
-                      Tax Invoice PDF View
+                      Official Tax Invoice
                     </button>
                     <button
                       onClick={() => setActiveTab("XML")}
@@ -342,154 +343,39 @@ export default function InvoicesPage() {
               </div>
 
               {/* Body */}
-              <div className="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50/50">
+              <div className="p-4 sm:p-8 overflow-y-auto flex-1 space-y-6 bg-slate-200/70 print:p-0 print:bg-white print:overflow-visible">
                 {activeTab === "PREVIEW" && (
-                  /* Formal UAE Tax Invoice Paper Sheet */
-                  <div className="rounded-xl border border-slate-300 bg-white p-8 shadow-sm space-y-6 text-slate-900">
-                    {/* Invoice Top Legal Banner */}
-                    <div className="flex flex-col sm:flex-row justify-between pb-6 border-b border-slate-200 gap-4">
-                      <div>
-                        <h3 className="text-xl font-extrabold text-[#0F2B5C] tracking-tight">
-                          Al-Noor Technologies FZCO
-                        </h3>
-                        <p className="text-xs font-arabic font-bold text-slate-700">شركة النور للتقنية ش.م.ح</p>
-                        <p className="text-xs text-slate-600 mt-1 font-medium">
-                          Dubai Silicon Oasis, Tech Hub Tower 2, Office 504, Dubai, UAE
-                        </p>
-                        <p className="text-xs font-mono font-bold text-[#0F2B5C] mt-1">
-                          TRN: 100234567890003
-                        </p>
-                      </div>
-
-                      <div className="sm:text-right">
-                        <div className="inline-block px-3 py-1 rounded-md bg-[#0F2B5C] text-white text-xs font-bold uppercase tracking-wider mb-1">
-                          TAX INVOICE / فاتورة ضريبية
-                        </div>
-                        <div className="text-lg font-mono font-extrabold text-slate-950">
-                          {selectedInvoice.invoiceNumber}
-                        </div>
-                        <div className="text-xs text-slate-600 mt-1">
-                          Issue Date: <strong className="text-slate-900">{selectedInvoice.issueDate}</strong>
-                        </div>
-                        <div className="text-xs text-slate-600">
-                          Due Date: <strong className="text-slate-900">{selectedInvoice.dueDate}</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Buyer / Counterparty Details */}
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between text-xs gap-3">
-                      <div>
-                        <span className="font-bold uppercase tracking-wider text-slate-500 text-[10px]">
-                          Customer / Buyer Details (العميل)
-                        </span>
-                        <div className="text-sm font-extrabold text-slate-900 mt-0.5">
-                          {selectedInvoice.customerName}
-                        </div>
-                        <div className="text-slate-600 font-semibold mt-0.5">
-                          {selectedInvoice.customerTrn
-                            ? `UAE TRN: ${selectedInvoice.customerTrn}`
-                            : "Consumer / Non-VAT Registered Counterparty"}
-                        </div>
-                      </div>
-                      <div className="sm:text-right">
-                        <span className="font-bold uppercase tracking-wider text-slate-500 text-[10px]">
-                          E-Invoicing Transmission Ref
-                        </span>
-                        <div className="font-mono text-emerald-800 font-bold mt-0.5">
-                          {selectedInvoice.externalReference || "Pending Transmission"}
-                        </div>
-                        <div className="text-slate-500 text-[10px] font-medium">
-                          Exchange Status: {selectedInvoice.exchangeStatus}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Line Items Table */}
-                    <div className="border border-slate-200 rounded-xl overflow-hidden">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="bg-slate-100 border-b border-slate-200 text-slate-800 font-bold">
-                            <th className="py-2.5 px-3">Description</th>
-                            <th className="py-2.5 px-3 text-center">Qty</th>
-                            <th className="py-2.5 px-3 text-right">Unit Price</th>
-                            <th className="py-2.5 px-3 text-right">Net</th>
-                            <th className="py-2.5 px-3 text-center">VAT %</th>
-                            <th className="py-2.5 px-3 text-right">VAT Amount</th>
-                            <th className="py-2.5 px-3 text-right">Gross Total</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-slate-900 font-medium">
-                          {selectedInvoice.lines.map((l) => (
-                            <tr key={l.id}>
-                              <td className="py-3 px-3 font-semibold text-slate-900">{l.description}</td>
-                              <td className="py-3 px-3 text-center tabular-nums">{l.quantity}</td>
-                              <td className="py-3 px-3 text-right font-mono tabular-nums">
-                                {l.unitPrice.toFixed(2)}
-                              </td>
-                              <td className="py-3 px-3 text-right font-mono tabular-nums">
-                                {l.netAmount.toFixed(2)}
-                              </td>
-                              <td className="py-3 px-3 text-center">
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 font-bold text-[10px]">
-                                  {l.taxRatePercent}%
-                                </span>
-                              </td>
-                              <td className="py-3 px-3 text-right font-mono tabular-nums text-emerald-700 font-bold">
-                                {l.taxAmount.toFixed(2)}
-                              </td>
-                              <td className="py-3 px-3 text-right font-mono tabular-nums font-extrabold text-slate-950">
-                                {l.grossAmount.toFixed(2)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Totals & QR Section */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-slate-200 gap-6">
-                      <div className="flex items-center gap-4">
-                        <div className="h-20 w-20 p-2 rounded-xl border border-slate-300 bg-white flex items-center justify-center shadow-xs">
-                          <QrCode className="h-16 w-16 text-slate-950" />
-                        </div>
-                        <div className="text-[11px] text-slate-600 max-w-xs space-y-0.5 font-medium">
-                          <div className="font-bold text-slate-900">UAE FTA E-Invoice QR Stamp</div>
-                          <div>Encoded with Seller TRN, timestamp, totals, and document cryptographic hash.</div>
-                        </div>
-                      </div>
-
-                      <div className="w-full sm:w-64 space-y-2 text-xs">
-                        <div className="flex justify-between text-slate-700 font-medium">
-                          <span>Total Net Amount:</span>
-                          <span className="font-mono tabular-nums font-bold">AED {selectedInvoice.netAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-700 font-medium">
-                          <span>Total UAE VAT (5%):</span>
-                          <span className="font-mono tabular-nums text-emerald-700 font-extrabold">
-                            AED {selectedInvoice.taxAmount.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-slate-950 text-sm font-black pt-2 border-t border-slate-200">
-                          <span>Total Payable (AED):</span>
-                          <span className="font-mono tabular-nums">AED {selectedInvoice.totalAmount.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <UaeTaxInvoiceSheet invoice={selectedInvoice} />
                 )}
 
                 {activeTab === "XML" && (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-xs text-slate-700 font-semibold">
                       <span>Standard: Peppol International (PINT) Billing for UAE - UBL 2.1</span>
-                      <button
-                        onClick={() => copyToClipboard(selectedInvoice.xmlContent || "XML Pending")}
-                        className="inline-flex items-center gap-1 font-bold text-blue-700 hover:text-blue-800"
-                      >
-                        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                        <span>{copied ? "Copied" : "Copy XML"}</span>
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => copyToClipboard(selectedInvoice.xmlContent || "XML Pending")}
+                          className="inline-flex items-center gap-1 font-bold text-blue-700 hover:text-blue-800"
+                        >
+                          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                          <span>{copied ? "Copied" : "Copy XML"}</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            const blob = new Blob([selectedInvoice.xmlContent || "<xml/>"], { type: "application/xml" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `${selectedInvoice.invoiceNumber}_pint_ae.xml`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="inline-flex items-center gap-1 font-bold text-emerald-700 hover:text-emerald-800"
+                        >
+                          <FileCode2 className="h-3.5 w-3.5" />
+                          <span>Download .XML</span>
+                        </button>
+                      </div>
                     </div>
                     <pre className="p-4 rounded-xl bg-slate-950 text-emerald-400 font-mono text-[11px] overflow-x-auto max-h-96">
                       {selectedInvoice.xmlContent ||
@@ -522,14 +408,31 @@ export default function InvoicesPage() {
               </div>
 
               {/* Footer Actions */}
-              <div className="p-4 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3">
-                <button
-                  onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  <Printer className="h-4 w-4" />
-                  <span>Print Tax Invoice PDF</span>
-                </button>
+              <div className="p-4 border-t border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 print:hidden">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
+                  >
+                    <Printer className="h-4 w-4 text-slate-600" />
+                    <span>Print Tax Invoice PDF</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const blob = new Blob([selectedInvoice.xmlContent || "<xml/>"], { type: "application/xml" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `${selectedInvoice.invoiceNumber}_pint_ae.xml`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                  >
+                    <FileCode2 className="h-3.5 w-3.5 text-blue-700" />
+                    <span>Download UBL XML</span>
+                  </button>
+                </div>
 
                 <div className="flex items-center gap-2">
                   {selectedInvoice.status === "DRAFT" && (
