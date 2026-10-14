@@ -2,6 +2,7 @@
   "name": "omni-invoice-uae",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Production-Ready UAE E-Invoicing SaaS Platform",
   "scripts": {
     "dev": "next dev",

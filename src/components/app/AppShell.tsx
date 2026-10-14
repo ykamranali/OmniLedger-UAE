@@ -11,7 +11,7 @@ import {
   Receipt,
   Boxes,
   Users2,
-  ShieldAlert,
+  ShieldCheck,
   FileBarChart,
   Settings,
   ChevronDown,
@@ -20,10 +20,9 @@ import {
   Bell,
   Search,
   ExternalLink,
-  ShieldCheck,
   Globe,
-  LogOut,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 
 interface AppShellProps {
@@ -55,37 +54,37 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-100 text-slate-800">
+    <div className="min-h-screen flex bg-[#F8FAFC] text-slate-900 font-sans">
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-slate-200/90 bg-white flex flex-col justify-between shrink-0 shadow-sm z-30">
+      <aside className="w-64 border-r border-slate-200 bg-white flex flex-col justify-between shrink-0 shadow-sm z-30">
         <div>
           {/* Brand Header */}
-          <div className="h-16 border-b border-slate-200/80 px-5 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-900 text-white shadow-sm">
+          <div className="h-16 border-b border-slate-200/90 px-5 flex items-center justify-between bg-white">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0F2B5C] text-white shadow-md shadow-blue-950/20 group-hover:scale-105 transition-transform">
                 <FileCheck2 className="h-5 w-5" />
               </div>
               <div>
                 <span className="font-extrabold text-slate-900 tracking-tight text-sm">
                   {appConfig.shortName}
                 </span>
-                <span className="ml-1 text-[10px] font-semibold px-1 rounded bg-brand-50 text-brand-700">
-                  SaaS
+                <span className="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                  UAE
                 </span>
               </div>
             </Link>
           </div>
 
           {/* UAE Legal Entity Selector */}
-          <div className="p-3 border-b border-slate-100">
+          <div className="p-3.5 border-b border-slate-100 bg-slate-50/70">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1 px-1">
-              Active UAE Company
+              Active Legal Entity
             </label>
             <div className="relative">
               <select
                 value={selectedCompanyId}
                 onChange={(e) => setSelectedCompanyId(e.target.value)}
-                className="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/70 py-2 pl-3 pr-8 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-8 text-xs font-bold text-slate-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-600"
               >
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -93,11 +92,11 @@ export function AppShell({ children }: AppShellProps) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="h-4 w-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+              <ChevronDown className="h-3.5 w-3.5 text-slate-500 absolute right-3 top-3 pointer-events-none" />
             </div>
-            <div className="mt-1.5 px-1 flex items-center justify-between text-[11px] text-slate-500">
-              <span className="font-mono">TRN: {selectedCompany?.trn}</span>
-              <span className="text-emerald-700 font-semibold">{selectedCompany?.city}</span>
+            <div className="mt-1.5 px-1 flex items-center justify-between text-[11px] text-slate-600">
+              <span className="font-mono font-semibold text-slate-800">TRN: {selectedCompany?.trn}</span>
+              <span className="text-emerald-700 font-bold">{selectedCompany?.city}</span>
             </div>
           </div>
 
@@ -110,13 +109,13 @@ export function AppShell({ children }: AppShellProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     isActive
-                      ? "bg-brand-900 text-white shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      ? "bg-[#0F2B5C] text-white shadow-md shadow-blue-950/15"
+                      : "text-slate-700 hover:bg-slate-100/80 hover:text-slate-900"
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? "text-brand-300" : "text-slate-500"}`} />
+                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-blue-300" : "text-slate-500"}`} />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -125,20 +124,26 @@ export function AppShell({ children }: AppShellProps) {
         </div>
 
         {/* Sidebar Footer Controls */}
-        <div className="p-4 border-t border-slate-200 space-y-3">
-          <div className="p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-[11px] text-emerald-900 flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+        <div className="p-4 border-t border-slate-200 bg-slate-50/50 space-y-3">
+          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200/90 text-[11px] text-emerald-950 flex items-center gap-2.5">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+            </span>
             <div>
-              <div className="font-bold">ASP Sandbox Live</div>
-              <div className="text-[10px] text-emerald-700">Peppol DCTCE Connected</div>
+              <div className="font-extrabold text-emerald-900">ASP Sandbox Live</div>
+              <div className="text-[10px] text-emerald-700 font-medium">Peppol DCTCE Connected</div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-1 text-xs text-slate-500">
-            <Link href="/admin" className="hover:text-brand-700 font-medium text-[11px]">
-              Platform Admin &rarr;
+          <div className="flex items-center justify-between pt-1 text-xs text-slate-600">
+            <Link href="/admin" className="hover:text-blue-700 font-bold text-[11px]">
+              Admin Console &rarr;
             </Link>
-            <button onClick={toggleLanguage} className="p-1 rounded hover:bg-slate-100 text-[11px]">
+            <button
+              onClick={toggleLanguage}
+              className="p-1 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 font-semibold text-[11px] text-slate-700"
+            >
               {isArabic ? "English" : "العربية"}
             </button>
           </div>
@@ -148,14 +153,14 @@ export function AppShell({ children }: AppShellProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Navbar */}
-        <header className="h-16 border-b border-slate-200/80 bg-white px-6 flex items-center justify-between shrink-0 shadow-sm">
+        <header className="h-16 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0 shadow-2xs">
           <div className="flex items-center gap-4">
             <div className="relative hidden sm:block">
-              <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-2.5" />
               <input
                 type="text"
                 placeholder="Search invoices by number, counterparty, or TRN..."
-                className="w-80 rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-80 rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
               />
             </div>
           </div>
@@ -163,7 +168,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="flex items-center gap-3">
             <Link
               href="/app/invoices?new=true"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-800 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0F2B5C] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#1E40AF] transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Create Invoice</span>
@@ -171,13 +176,13 @@ export function AppShell({ children }: AppShellProps) {
 
             <div className="h-5 w-px bg-slate-200 mx-1"></div>
 
-            <div className="flex items-center gap-2 text-xs">
-              <div className="h-7 w-7 rounded-full bg-brand-100 text-brand-800 flex items-center justify-center font-bold">
+            <div className="flex items-center gap-2.5 text-xs">
+              <div className="h-8 w-8 rounded-full bg-blue-100 text-[#0F2B5C] border border-blue-200 flex items-center justify-center font-extrabold text-xs">
                 TC
               </div>
               <div className="hidden sm:block text-left">
-                <div className="font-semibold text-slate-900 text-xs leading-tight">Tariq Controller</div>
-                <div className="text-[10px] text-slate-500 leading-tight">Financial Controller</div>
+                <div className="font-bold text-slate-900 text-xs leading-tight">Tariq Controller</div>
+                <div className="text-[10px] text-slate-500 font-medium leading-tight">Financial Controller</div>
               </div>
             </div>
           </div>

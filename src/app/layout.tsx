@@ -1,6 +1,21 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Cairo } from "next/font/google";
 import "./globals.css";
 import { appConfig } from "@/lib/config/app-config";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
+
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  variable: "--font-cairo",
+  display: "swap",
+  weight: ["400", "600", "700", "800"],
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -8,7 +23,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: `${appConfig.name} | Cloud UAE E-Invoicing & VAT Compliance SaaS`,
+  title: `${appConfig.name} | UAE E-Invoicing & VAT Compliance SaaS`,
   description: appConfig.description,
   keywords: [
     "UAE E-Invoicing",
@@ -30,16 +45,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr" className="h-full">
+    <html lang="en" dir="ltr" className={`${inter.variable} ${cairo.variable} h-full`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
-      <body className="h-full font-sans antialiased text-slate-900 bg-slate-50 selection:bg-brand-500 selection:text-white">
+      <body className="h-full font-sans antialiased text-slate-900 bg-slate-50 selection:bg-blue-600 selection:text-white">
         {children}
       </body>
     </html>
