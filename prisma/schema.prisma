@@ -1,0 +1,603 @@
+// OmniInvoice UAE - Production Prisma Schema
+// Conforms to UAE E-Invoicing (PINT AE / Peppol BIS 3.0), Multi-Tenant SaaS isolation, and Audit standards
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// Core Multi-Tenant & Identity
+// -------------------------------------------------------------
+
+model Tenant {
+  id              String            @id @default(uuid())
+  name            String
+  slug            String            @unique
+  plan            String            @default("STARTER") // STARTER, BUSINESS, PROFESSIONAL, ACCOUNTANT, ENTERPRISE
+  status          String            @default("ACTIVE") // ACTIVE, SUSPENDED, TRIAL
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  companies       Company[]
+  memberships     TenantMembership[]
+  subscriptions   Subscription[]
+  usageRecords    UsageRecord[]
+  apiKeys         ApiKey[]
+  auditLogs       AuditLog[]
+
+  @@map("tenants")
+}
+
+model Company {
+  id                    String      @id @default(uuid())
+  tenantId              String
+  legalNameEn           String
+  legalNameAr           String?
+  tradingName           String?
+  trn                   String      // UAE Tax Registration Number (15 digits, starts with 100)
+  crn                   String?     // Commercial Registration Number / Trade License
+  taxScheme             String      @default("VAT") // VAT
+  currency              String      @default("AED")
+  streetAddress         String
+  additionalAddress     String?
+  buildingNumber        String?
+  city                  String      @default("Dubai") // Dubai, Abu Dhabi, Sharjah, Ajman, RAK, UAQ, Fujairah
+  emirate               String      @default("Dubai")
+  postalZone            String?
+  countryCode           String      @default("AE")
+  contactEmail          String
+  contactPhone          String
+  logoUrl               String?
+  isVatRegistered       Boolean     @default(true)
+  invoiceSequencePrefix String      @default("INV-")
+  creditNoteSequencePrefix String   @default("CN-")
+  currentInvoiceSequence  Int       @default(1000)
+  currentCreditNoteSequence Int     @default(1000)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  tenant                Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branches              Branch[]
+  customers             Customer[]
+  suppliers             Supplier[]
+  productsServices      ProductService[]
+  taxCodes              TaxCode[]
+  invoices              Invoice[]
+  creditNotes           CreditNote[]
+  providerConnections   ProviderConnection[]
+
+  @@unique([tenantId, trn])
+  @@index([tenantId])
+  @@map("companies")
+}
+
+model Branch {
+  id              String      @id @default(uuid())
+  companyId       String
+  branchCode      String      // e.g. "BR-01", "HQ"
+  name            String
+  city            String
+  emirate         String
+  addressLine     String
+  isDefault       Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoices        Invoice[]
+
+  @@unique([companyId, branchCode])
+  @@index([companyId])
+  @@map("branches")
+}
+
+model User {
+  id              String      @id @default(uuid())
+  email           String      @unique
+  passwordHash    String
+  fullName        String
+  phone           String?
+  preferredLocale String      @default("en") // "en" | "ar"
+  mfaEnabled      Boolean     @default(false)
+  mfaSecret       String?
+  isSuperAdmin    Boolean     @default(false)
+  status          String      @default("ACTIVE") // ACTIVE, INVITED, SUSPENDED
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  memberships     TenantMembership[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model TenantMembership {
+  id              String      @id @default(uuid())
+  tenantId        String
+  userId          String
+  roleId          String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role            Role        @relation(fields: [roleId], references: [id])
+
+  @@unique([tenantId, userId])
+  @@index([tenantId])
+  @@index([userId])
+  @@map("tenant_memberships")
+}
+
+model Role {
+  id              String      @id @default(uuid())
+  name            String      @unique // OWNER, ADMIN, FINANCIAL_CONTROLLER, ACCOUNTANT, VIEWER
+  description     String?
+  permissions     RolePermission[]
+  memberships     TenantMembership[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id              String      @id @default(uuid())
+  code            String      @unique // e.g. "invoice:create", "invoice:issue", "compliance:submit"
+  description     String
+  roles           RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id              String      @id @default(uuid())
+  roleId          String
+  permissionId    String
+
+  role            Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission      Permission  @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// -------------------------------------------------------------
+// Counterparties: Customers & Suppliers
+// -------------------------------------------------------------
+
+model Customer {
+  id              String      @id @default(uuid())
+  companyId       String
+  legalNameEn     String
+  legalNameAr     String?
+  tradingName     String?
+  customerType    String      @default("B2B") // B2B, B2C, B2G
+  trn             String?     // UAE TRN if B2B registered
+  crn             String?     // Commercial Reg No
+  email           String
+  phone           String?
+  streetAddress   String
+  city            String
+  emirate         String?
+  postalZone      String?
+  countryCode     String      @default("AE")
+  paymentTermsDays Int        @default(30)
+  defaultCurrency String      @default("AED")
+  isTaxExempt     Boolean     @default(false)
+  status          String      @default("ACTIVE") // ACTIVE, ARCHIVED
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoices        Invoice[]
+
+  @@index([companyId])
+  @@index([trn])
+  @@map("customers")
+}
+
+model Supplier {
+  id              String      @id @default(uuid())
+  companyId       String
+  legalNameEn     String
+  legalNameAr     String?
+  trn             String?
+  email           String?
+  phone           String?
+  streetAddress   String?
+  city            String?
+  countryCode     String      @default("AE")
+  paymentTermsDays Int        @default(30)
+  status          String      @default("ACTIVE")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("suppliers")
+}
+
+model ProductService {
+  id              String      @id @default(uuid())
+  companyId       String
+  itemCode        String
+  nameEn          String
+  nameAr          String?
+  description     String?
+  unitPrice       Decimal     @db.Decimal(14, 4)
+  unitOfMeasure   String      @default("EA") // EA, HMG, HUR, KGM, LTR, MTR, etc. (UN/ECE Rec 20)
+  taxRatePercent  Decimal     @default(5.00) @db.Decimal(5, 2)
+  taxCategory     String      @default("S") // S (Standard 5%), Z (Zero 0%), E (Exempt), O (Out of scope)
+  status          String      @default("ACTIVE")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoiceLines    InvoiceLine[]
+
+  @@unique([companyId, itemCode])
+  @@index([companyId])
+  @@map("products_services")
+}
+
+model TaxCode {
+  id              String      @id @default(uuid())
+  companyId       String
+  code            String      // e.g. "VAT-5", "ZERO-0", "EXEMPT", "OUT-SCOPE"
+  name            String
+  ratePercent     Decimal     @db.Decimal(5, 2)
+  categoryCode    String      // S, Z, E, O (UN/ECE 5305 / Peppol)
+  reasonCode      String?     // Exemption reason code if Z or E
+  description     String?
+  isDefault       Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, code])
+  @@map("tax_codes")
+}
+
+// -------------------------------------------------------------
+// Invoicing & Financial Operations
+// -------------------------------------------------------------
+
+model Invoice {
+  id                  String      @id @default(uuid())
+  companyId           String
+  branchId            String?
+  customerId          String
+  invoiceNumber       String      // Sequential unique e.g. INV-2026-0001
+  invoiceType         String      @default("TAX_INVOICE") // TAX_INVOICE (388), SIMPLIFIED_INVOICE (380), COMMERCIAL_INVOICE
+  status              String      @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, ISSUED, QUEUED_SUBMISSION, SUBMITTED, DELIVERED, REJECTED, CANCELLED
+  exchangeStatus      String      @default("NOT_SUBMITTED") // NOT_SUBMITTED, QUEUED, TRANSMITTED, DELIVERED_TO_BUYER, BUYER_REJECTED
+  taxReportingStatus  String      @default("PENDING") // PENDING, REPORTED_CONFIRMED, EXEMPT, FAILED
+  issueDate           DateTime
+  dueDate             DateTime
+  currency            String      @default("AED")
+  exchangeRate        Decimal     @default(1.0000) @db.Decimal(10, 4)
+  notes               String?
+  paymentTerms        String?
+  
+  // Financial Totals (Decimals for absolute precision)
+  netAmount           Decimal     @db.Decimal(14, 2)
+  discountAmount      Decimal     @default(0.00) @db.Decimal(14, 2)
+  taxableAmount       Decimal     @db.Decimal(14, 2)
+  taxAmount           Decimal     @db.Decimal(14, 2)
+  totalAmount         Decimal     @db.Decimal(14, 2)
+  amountPaid          Decimal     @default(0.00) @db.Decimal(14, 2)
+  paymentStatus       String      @default("UNPAID") // UNPAID, PARTIAL, PAID, OVERDUE
+
+  // UAE E-Invoicing / PINT AE Cryptographic & Compliance Fields
+  canonicalXml        String?     @db.Text
+  documentHash        String?     // SHA-256 hash of structured canonical document
+  previousDocumentHash String?    // Cryptographic hash chain link
+  qrCodePayload       String?     @db.Text
+  uuid                String      @default(uuid()) // Unique UBL Universal Document ID
+  complianceVersion   String      @default("PINT-AE-1.0")
+
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  company             Company     @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  branch              Branch?     @relation(fields: [branchId], references: [id])
+  customer            Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  lines               InvoiceLine[]
+  creditNotes         CreditNote[]
+  documents           InvoiceDocument[]
+  events              InvoiceEvent[]
+  submissions         ProviderSubmission[]
+  payments            Payment[]
+
+  @@unique([companyId, invoiceNumber])
+  @@index([companyId, status])
+  @@index([companyId, issueDate])
+  @@index([customerId])
+  @@index([documentHash])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id                  String      @id @default(uuid())
+  invoiceId           String
+  productId           String?
+  lineNumber          Int
+  description         String
+  quantity            Decimal     @db.Decimal(12, 4)
+  unitPrice           Decimal     @db.Decimal(14, 4)
+  unitOfMeasure       String      @default("EA")
+  discountRate        Decimal     @default(0.00) @db.Decimal(5, 2)
+  discountAmount      Decimal     @default(0.00) @db.Decimal(14, 2)
+  netAmount           Decimal     @db.Decimal(14, 2)
+  taxRatePercent      Decimal     @default(5.00) @db.Decimal(5, 2)
+  taxCategory         String      @default("S") // S, Z, E, O
+  taxAmount           Decimal     @db.Decimal(14, 2)
+  grossAmount         Decimal     @db.Decimal(14, 2)
+
+  invoice             Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product             ProductService? @relation(fields: [productId], references: [id])
+
+  @@unique([invoiceId, lineNumber])
+  @@map("invoice_lines")
+}
+
+model CreditNote {
+  id                  String      @id @default(uuid())
+  companyId           String
+  originalInvoiceId   String
+  creditNoteNumber    String      // Sequential unique e.g. CN-2026-0001
+  status              String      @default("ISSUED")
+  issueDate           DateTime    @default(now())
+  reason              String
+  totalAmount         Decimal     @db.Decimal(14, 2)
+  taxAmount           Decimal     @db.Decimal(14, 2)
+  documentHash        String?
+  canonicalXml        String?     @db.Text
+  createdAt           DateTime    @default(now())
+
+  company             Company     @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  originalInvoice     Invoice     @relation(fields: [originalInvoiceId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, creditNoteNumber])
+  @@map("credit_notes")
+}
+
+model InvoiceDocument {
+  id              String      @id @default(uuid())
+  invoiceId       String
+  documentType    String      // "PDF", "XML_UBL", "PROVIDER_RECEIPT"
+  fileKey         String      // S3 object key / path
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  checksumSha256  String
+  createdAt       DateTime    @default(now())
+
+  invoice         Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_documents")
+}
+
+model InvoiceEvent {
+  id              String      @id @default(uuid())
+  invoiceId       String
+  eventType       String      // CREATED, APPROVED, ISSUED, SUBMISSION_QUEUED, SUBMISSION_ACCEPTED, SUBMISSION_REJECTED, PAID
+  statusBefore    String?
+  statusAfter     String
+  actorUserId     String?
+  message         String
+  metadata        String?     @db.Text // JSON metadata
+  createdAt       DateTime    @default(now())
+
+  invoice         Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_events")
+}
+
+// -------------------------------------------------------------
+// Accredited Service Provider (ASP) Integration
+// -------------------------------------------------------------
+
+model ProviderConnection {
+  id              String      @id @default(uuid())
+  companyId       String
+  providerCode    String      // "PEPPOL_SANDBOX", "ASP_GENERIC", "TEST_SIMULATOR"
+  providerName    String
+  environment     String      @default("SANDBOX") // "SANDBOX" | "PRODUCTION"
+  apiUrl          String
+  credentialsEnc  String      @db.Text // AES-256 encrypted credentials JSON
+  isActive        Boolean     @default(true)
+  lastHealthCheck DateTime?
+  healthStatus    String      @default("HEALTHY")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  company         Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  submissions     ProviderSubmission[]
+
+  @@unique([companyId, providerCode, environment])
+  @@map("provider_connections")
+}
+
+model ProviderSubmission {
+  id                  String      @id @default(uuid())
+  connectionId        String
+  invoiceId           String
+  externalReference   String?     // Transmission ID returned by ASP
+  status              String      @default("PENDING") // PENDING, ACCEPTED, REJECTED, UNKNOWN_TIMEOUT
+  responseCode        String?
+  responseMessage     String?
+  rawPayload          String?     @db.Text
+  rawResponse         String?     @db.Text
+  retryCount          Int         @default(0)
+  nextRetryAt         DateTime?
+  idempotencyKey      String      @unique
+  submittedAt         DateTime    @default(now())
+  confirmedAt         DateTime?
+
+  connection          ProviderConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  invoice             Invoice            @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  messages            ProviderMessage[]
+
+  @@index([invoiceId])
+  @@index([externalReference])
+  @@map("provider_submissions")
+}
+
+model ProviderMessage {
+  id              String      @id @default(uuid())
+  submissionId    String
+  messageType     String      // "STATUS_CALLBACK", "BUSINESS_ACK", "BUYER_ACCEPTANCE", "REJECTION_CODE"
+  payload         String      @db.Text
+  receivedAt      DateTime    @default(now())
+
+  submission      ProviderSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("provider_messages")
+}
+
+model WebhookEvent {
+  id              String      @id @default(uuid())
+  tenantId        String?
+  sourceProvider  String
+  eventType       String
+  signatureHeader String?
+  payload         String      @db.Text
+  processingStatus String     @default("PENDING") // PENDING, PROCESSED, FAILED, DUPLICATE_SKIPPED
+  errorMessage    String?
+  createdAt       DateTime    @default(now())
+  processedAt     DateTime?
+
+  @@index([sourceProvider, eventType])
+  @@map("webhook_events")
+}
+
+// -------------------------------------------------------------
+// Payments & Subscriptions
+// -------------------------------------------------------------
+
+model Payment {
+  id              String      @id @default(uuid())
+  invoiceId       String
+  amount          Decimal     @db.Decimal(14, 2)
+  currency        String      @default("AED")
+  paymentMethod   String      // BANK_TRANSFER, CHEQUE, CARD, WIO_PAY
+  paymentReference String?
+  paymentDate     DateTime    @default(now())
+  notes           String?
+
+  invoice         Invoice     @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Subscription {
+  id              String      @id @default(uuid())
+  tenantId        String
+  planCode        String      // STARTER, BUSINESS, PROFESSIONAL, ACCOUNTANT, ENTERPRISE
+  status          String      @default("ACTIVE") // TRIAL, ACTIVE, PAST_DUE, CANCELLED
+  billingCycle    String      @default("MONTHLY") // MONTHLY, ANNUAL
+  currentPeriodStart DateTime @default(now())
+  currentPeriodEnd   DateTime
+  invoiceQuota    Int         @default(100) // Monthly invoice limit
+  usedInvoiceCount Int        @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("subscriptions")
+}
+
+model UsageRecord {
+  id              String      @id @default(uuid())
+  tenantId        String
+  periodMonth     String      // "2026-10"
+  metric          String      // "INVOICES_ISSUED", "ASP_TRANSMISSIONS", "STORAGE_MB"
+  quantity        Int         @default(0)
+  recordedAt      DateTime    @default(now())
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, periodMonth, metric])
+  @@map("usage_records")
+}
+
+// -------------------------------------------------------------
+// Security, API Keys, Idempotency & Auditing
+// -------------------------------------------------------------
+
+model ApiKey {
+  id              String      @id @default(uuid())
+  tenantId        String
+  keyPrefix       String      // e.g. "omni_live_abc..."
+  keyHash         String      @unique // SHA-256 hash of secret key
+  name            String
+  permissions     String      // JSON array of authorized scopes
+  lastUsedAt      DateTime?
+  expiresAt       DateTime?
+  status          String      @default("ACTIVE") // ACTIVE, REVOKED
+  createdAt       DateTime    @default(now())
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("api_keys")
+}
+
+model IdempotencyKey {
+  id              String      @id @default(uuid())
+  key             String      @unique
+  tenantId        String
+  endpoint        String
+  requestHash     String
+  responseStatus  Int?
+  responseBody    String?     @db.Text
+  createdAt       DateTime    @default(now())
+  expiresAt       DateTime
+
+  @@index([key, tenantId])
+  @@map("idempotency_keys")
+}
+
+model AuditLog {
+  id              String      @id @default(uuid())
+  tenantId        String?
+  userId          String?
+  action          String      // "INVOICE_ISSUED", "COMPANY_TRN_UPDATED", "PROVIDER_CONNECTED"
+  resourceType    String      // "Invoice", "Company", "Subscription"
+  resourceId      String
+  ipAddress       String?
+  userAgent       String?
+  changesJson     String?     @db.Text
+  createdAt       DateTime    @default(now())
+
+  tenant          Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user            User?       @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+model ComplianceVersion {
+  id              String      @id @default(uuid())
+  ruleIdentifier  String      @unique // e.g. "UAE-PINT-2026.1"
+  sourceDocument  String      // "UAE MoF Technical E-Invoicing Standard v1.0"
+  applicableVersion String    // "1.0.0"
+  effectiveDate   DateTime
+  implementationStatus String  // "ACTIVE", "DEPRECATED", "DRAFT"
+  testCoverageRate Decimal    @db.Decimal(5, 2)
+  lastVerifiedAt  DateTime    @default(now())
+  responsibleReviewer String
+  specificationNotes String?  @db.Text
+
+  @@map("compliance_versions")
+}

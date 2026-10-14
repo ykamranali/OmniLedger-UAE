@@ -1,0 +1,59 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: omni_invoice_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_NAME=OmniInvoice UAE
+      - DATABASE_URL=postgresql://omni_user:omni_secure_pass_2026@postgres:5432/omni_invoicing_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - ASP_ENVIRONMENT=SANDBOX
+      - COMPLIANCE_VERSION=PINT-AE-1.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: omni_invoice_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: omni_user
+      POSTGRES_PASSWORD: omni_secure_pass_2026
+      POSTGRES_DB: omni_invoicing_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U omni_user -d omni_invoicing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: omni_invoice_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
