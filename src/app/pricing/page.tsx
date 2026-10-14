@@ -97,14 +97,14 @@ export default function PricingPage() {
 
                 <div className="pt-6 mt-6 border-t border-slate-100">
                   <Link
-                    href={`/app/dashboard?plan=${plan.id}`}
+                    href={`/checkout?plan=${plan.id}`}
                     className={`w-full py-2.5 rounded-xl font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-colors ${
                       plan.isPopular
                         ? "bg-[#0F2B5C] text-white hover:bg-[#1E40AF]"
                         : "bg-slate-100 text-slate-900 hover:bg-slate-200"
                     }`}
                   >
-                    <span>Select {plan.name}</span>
+                    <span>Subscribe Online</span>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>

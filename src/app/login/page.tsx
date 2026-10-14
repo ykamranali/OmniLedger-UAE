@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { appConfig } from "@/lib/config/app-config";
 import { FileCheck2, Lock, Mail, ArrowRight, ShieldCheck, KeyRound } from "lucide-react";
 
+import { OmniLedgerLogo } from "@/components/brand/OmniLedgerLogo";
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("tariq.controller@alnoor-tech.ae");
@@ -30,13 +32,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
-        <Link href="/" className="inline-flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-900 text-white shadow-md">
-            <FileCheck2 className="h-5 w-5" />
-          </div>
-          <span className="font-extrabold text-xl text-slate-900">
-            {appConfig.shortName} <span className="text-brand-600">UAE</span>
-          </span>
+        <Link href="/" className="inline-flex justify-center">
+          <OmniLedgerLogo size="lg" />
         </Link>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           Sign In to Customer SaaS Portal

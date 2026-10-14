@@ -52,11 +52,11 @@ export function Navbar() {
           <Link href="/pricing" className="hover:text-blue-700 transition-colors">
             {isArabic ? "الأسعار" : "Pricing"}
           </Link>
-          <Link href="/security" className="hover:text-blue-700 transition-colors">
-            {isArabic ? "الأمان" : "Security"}
+          <Link href="/contact" className="hover:text-blue-700 transition-colors font-semibold">
+            {isArabic ? "اتصل بنا" : "Contact"}
           </Link>
           <Link href="/developers" className="hover:text-blue-700 transition-colors">
-            {isArabic ? "المطورين" : "API & Docs"}
+            {isArabic ? "المطورين" : "API"}
           </Link>
         </nav>
 
@@ -72,12 +72,20 @@ export function Navbar() {
             <span>{isArabic ? "English" : "العربية"}</span>
           </button>
 
-          {/* Admin Link */}
+          {/* Sign In Link */}
           <Link
-            href="/admin"
-            className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1.5"
+            href="/login"
+            className="text-xs font-bold text-slate-700 hover:text-blue-700 px-2 py-1.5"
           >
-            {isArabic ? "لوحة الإدارة" : "Admin Console"}
+            {isArabic ? "تسجيل الدخول" : "Sign In"}
+          </Link>
+
+          {/* Register / Get Started CTA */}
+          <Link
+            href="/register"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-900 shadow-2xs hover:bg-emerald-100 transition-all"
+          >
+            <span>{isArabic ? "تسجيل حساب" : "Get Started"}</span>
           </Link>
 
           {/* Customer Portal CTA */}
@@ -147,20 +155,29 @@ export function Navbar() {
             Security & Privacy
           </Link>
           <Link
-            href="/developers"
+            href="/contact"
             onClick={() => setMobileMenuOpen(false)}
             className="block py-2 text-sm font-semibold text-slate-800 hover:text-blue-600"
           >
-            API & Webhooks
+            Contact & Advisory
           </Link>
           <div className="pt-4 border-t border-slate-100 flex flex-col gap-2">
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-lg"
-            >
-              Platform Administration
-            </Link>
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2 text-xs font-bold text-slate-800 bg-slate-100 rounded-xl hover:bg-slate-200"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center py-2 text-xs font-bold text-emerald-950 bg-emerald-100 border border-emerald-300 rounded-xl"
+              >
+                Get Started
+              </Link>
+            </div>
             <Link
               href="/app/dashboard"
               onClick={() => setMobileMenuOpen(false)}
