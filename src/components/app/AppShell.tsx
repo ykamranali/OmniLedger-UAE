@@ -9,6 +9,7 @@ import {
   FileCheck2,
   LayoutDashboard,
   Receipt,
+  Boxes,
   Users2,
   ShieldAlert,
   FileBarChart,
@@ -39,6 +40,7 @@ export function AppShell({ children }: AppShellProps) {
   const navItems = [
     { name: "Dashboard", href: "/app/dashboard", icon: LayoutDashboard },
     { name: "Invoices & Credits", href: "/app/invoices", icon: Receipt },
+    { name: "Purchase Bills", href: "/app/purchases", icon: Boxes },
     { name: "Customers & Parties", href: "/app/customers", icon: Users2 },
     { name: "UAE Compliance Hub", href: "/app/compliance", icon: ShieldCheck },
     { name: "VAT 201 Reports", href: "/app/reports", icon: FileBarChart },
