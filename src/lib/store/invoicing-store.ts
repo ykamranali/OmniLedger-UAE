@@ -116,6 +116,27 @@ export interface SubscriptionModel {
   currentPeriodEnd: string;
 }
 
+export type UserRole =
+  | "SUPER_ADMIN"
+  | "COMPANY_ADMIN"
+  | "FINANCIAL_CONTROLLER"
+  | "BILLING_CLERK"
+  | "AUDITOR";
+
+export interface UserModel {
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+  role: UserRole;
+  assignedCompanyIds: string[]; // Strict isolation: only these company IDs are accessible
+  status: "ACTIVE" | "SUSPENDED";
+  phoneNumber?: string;
+  notes?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
 class InvoicingDataStore {
   private companies: CompanyModel[] = [];
   private customers: CustomerModel[] = [];
@@ -123,6 +144,8 @@ class InvoicingDataStore {
   private creditNotes: CreditNoteModel[] = [];
   private auditLogs: AuditLogModel[] = [];
   private subscriptions: SubscriptionModel[] = [];
+  private users: UserModel[] = [];
+  private currentUserId = "usr-super-admin";
 
   constructor() {
     this.seedInitialData();
@@ -430,6 +453,76 @@ class InvoicingDataStore {
         details: "Document received and verified by Access Point. Delivery acknowledgement confirmed.",
       },
     ];
+
+    // 7. Seed Client Users & Roles with strict company isolation
+    this.users = [
+      {
+        id: "usr-super-admin",
+        name: "Kamran Ali",
+        email: "kamran.a@ramtechuae.com",
+        password: "SuperAdmin2026!",
+        role: "SUPER_ADMIN",
+        assignedCompanyIds: ["*"],
+        status: "ACTIVE",
+        phoneNumber: "+971 56 450 4650",
+        notes: "Platform Owner & Master Super Administrator",
+        createdAt: "2026-01-01T08:00:00Z",
+        lastLoginAt: "Active now",
+      },
+      {
+        id: "usr-gulf-admin",
+        name: "Saeed Al-Maktoum",
+        email: "saeed@gulfhorizon.ae",
+        password: "ClientPass2026!",
+        role: "COMPANY_ADMIN",
+        assignedCompanyIds: ["comp-auh-02"], // Strictly Gulf Horizon Logistics LLC only!
+        status: "ACTIVE",
+        phoneNumber: "+971 2 445 1122",
+        notes: "Managing Director at Gulf Horizon Logistics",
+        createdAt: "2026-02-15T10:30:00Z",
+        lastLoginAt: "2 hours ago",
+      },
+      {
+        id: "usr-ramtech-fin",
+        name: "Tariq Al-Hashimi",
+        email: "tariq.controller@ramtechuae.com",
+        password: "ClientPass2026!",
+        role: "FINANCIAL_CONTROLLER",
+        assignedCompanyIds: ["comp-dxb-01"], // Strictly Ramtech Technologies LLC only!
+        status: "ACTIVE",
+        phoneNumber: "+971 4 398 7654",
+        notes: "Financial Controller for Ramtech UAE",
+        createdAt: "2026-02-01T09:15:00Z",
+        lastLoginAt: "Yesterday",
+      },
+      {
+        id: "usr-gulf-billing",
+        name: "Fatima Al-Zahra",
+        email: "fatima.billing@gulfhorizon.ae",
+        password: "ClientPass2026!",
+        role: "BILLING_CLERK",
+        assignedCompanyIds: ["comp-auh-02"], // Strictly Gulf Horizon Logistics LLC only!
+        status: "ACTIVE",
+        phoneNumber: "+971 2 445 1123",
+        notes: "Accounts Receivable & Billing Clerk",
+        createdAt: "2026-03-01T11:00:00Z",
+        lastLoginAt: "3 days ago",
+      },
+      {
+        id: "usr-auditor",
+        name: "Zaid Al-Mansoor",
+        email: "zaid.auditor@deloitte-uae.ae",
+        password: "AuditPass2026!",
+        role: "AUDITOR",
+        assignedCompanyIds: ["comp-dxb-01"], // Read-only audit access for Ramtech Technologies LLC only!
+        status: "ACTIVE",
+        phoneNumber: "+971 4 555 9900",
+        notes: "External Tax Auditor - View Only Access",
+        createdAt: "2026-03-10T14:20:00Z",
+        lastLoginAt: "1 week ago",
+      },
+    ];
+    this.currentUserId = "usr-super-admin";
   }
 
   // --- Company Methods ---
@@ -439,6 +532,90 @@ class InvoicingDataStore {
 
   public getCompanyById(id: string): CompanyModel | undefined {
     return this.companies.find((c) => c.id === id);
+  }
+
+  public registerCompany(company: Omit<CompanyModel, "id" | "currentInvoiceSequence"> & { id?: string }): CompanyModel {
+    const newComp: CompanyModel = {
+      ...company,
+      id: company.id || `comp-${Date.now().toString().slice(-4)}`,
+      currentInvoiceSequence: 1000,
+    };
+    this.companies.push(newComp);
+    this.recordAudit("COMPANY_REGISTERED", "Company", newComp.id, `Registered legal entity ${newComp.legalNameEn} (TRN: ${newComp.trn})`);
+    return newComp;
+  }
+
+  // --- User & Access Control Methods ---
+  public getUsers(): UserModel[] {
+    return this.users;
+  }
+
+  public getUserById(id: string): UserModel | undefined {
+    return this.users.find((u) => u.id === id);
+  }
+
+  public getUserByEmail(email: string): UserModel | undefined {
+    return this.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  }
+
+  public createUser(user: Omit<UserModel, "id" | "createdAt">): UserModel {
+    const newUser: UserModel = {
+      ...user,
+      id: `usr-${Date.now().toString().slice(-5)}`,
+      createdAt: new Date().toISOString(),
+    };
+    this.users.unshift(newUser);
+    this.recordAudit(
+      "USER_CREATED",
+      "User",
+      newUser.id,
+      `Super admin created user ${newUser.name} (${newUser.email}) with role ${newUser.role} assigned to companies: [${newUser.assignedCompanyIds.join(", ")}]`
+    );
+    return newUser;
+  }
+
+  public updateUser(id: string, updates: Partial<UserModel>): UserModel | undefined {
+    const user = this.getUserById(id);
+    if (!user) return undefined;
+    Object.assign(user, updates);
+    this.recordAudit("USER_UPDATED", "User", user.id, `Updated user ${user.name} permissions/details`);
+    return user;
+  }
+
+  public deleteUser(id: string): boolean {
+    const idx = this.users.findIndex((u) => u.id === id);
+    if (idx !== -1) {
+      const removed = this.users.splice(idx, 1)[0];
+      this.recordAudit("USER_DELETED", "User", removed.id, `Deleted user ${removed.name}`);
+      return true;
+    }
+    return false;
+  }
+
+  public getCurrentUser(): UserModel {
+    return this.users.find((u) => u.id === this.currentUserId) || this.users[0];
+  }
+
+  public setCurrentUser(userOrId: UserModel | string): void {
+    if (typeof userOrId === "string") {
+      this.currentUserId = userOrId;
+    } else {
+      this.currentUserId = userOrId.id;
+    }
+  }
+
+  public getAccessibleCompanies(userId?: string): CompanyModel[] {
+    const uid = userId || this.currentUserId;
+    const user = this.users.find((u) => u.id === uid);
+    if (!user) return this.companies;
+
+    // Super Admin has unrestricted access to all legal entities
+    if (user.role === "SUPER_ADMIN" || user.assignedCompanyIds.includes("*")) {
+      return this.companies;
+    }
+
+    // Scoped client user: STRICTLY return only companies assigned to them
+    return this.companies.filter((c) => user.assignedCompanyIds.includes(c.id));
   }
 
   // --- Customer Methods ---
