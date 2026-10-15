@@ -128,6 +128,7 @@ export interface UserModel {
   name: string;
   email: string;
   password?: string;
+  passwordHash?: string;
   role: UserRole;
   assignedCompanyIds: string[]; // Strict isolation: only these company IDs are accessible
   status: "ACTIVE" | "SUSPENDED";
@@ -647,6 +648,19 @@ class InvoicingDataStore {
 
   public getInvoiceById(id: string): InvoiceModel | undefined {
     return this.invoices.find((inv) => inv.id === id);
+  }
+
+  public addInvoice(invoice: InvoiceModel): void {
+    this.invoices.unshift(invoice);
+  }
+
+  public deleteInvoice(id: string): boolean {
+    const idx = this.invoices.findIndex((inv) => inv.id === id);
+    if (idx !== -1) {
+      this.invoices.splice(idx, 1);
+      return true;
+    }
+    return false;
   }
 
   public createInvoice(data: {

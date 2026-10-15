@@ -42,6 +42,9 @@ function CheckoutContent() {
   const [cardCvv, setCardCvv] = useState("421");
   const [cardHolder, setCardHolder] = useState("Saeed Al-Maktoum");
 
+  const [receiptRef, setReceiptRef] = useState("RCP-2026-90412");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const plan =
     appConfig.subscriptionPlans.find((p) => p.id === selectedPlanId) ||
     appConfig.subscriptionPlans[1];
@@ -51,14 +54,39 @@ function CheckoutContent() {
   const vatAmount = Math.round(netPrice * 0.05 * 100) / 100;
   const grandTotal = Math.round((netPrice + vatAmount) * 100) / 100;
 
-  const handlePayAndSubscribe = (e: React.FormEvent) => {
+  const handlePayAndSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
+    setErrorMessage(null);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/v1/subscriptions/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: plan.id,
+          billingCycle,
+          companyName,
+          email,
+          trn,
+          paymentMethod: "TEST_UAE_GATEWAY",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMessage(data.error || "Payment checkout failed");
+        setIsProcessing(false);
+        return;
+      }
+
+      setReceiptRef(data.receiptRef || "RCP-2026-90412");
       setIsProcessing(false);
       setIsSuccess(true);
-    }, 1200);
+    } catch {
+      setErrorMessage("Network error processing payment. Please retry.");
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -89,7 +117,7 @@ function CheckoutContent() {
             <div className="text-left bg-slate-50 rounded-xl p-5 border border-slate-200 text-xs space-y-3 font-mono">
               <div className="flex justify-between border-b border-slate-200 pb-2">
                 <span className="font-sans font-bold text-slate-700">Receipt Ref:</span>
-                <span className="font-bold text-slate-900">RCP-2026-90412</span>
+                <span className="font-bold text-slate-900">{receiptRef}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-sans text-slate-500">Plan Subscribed:</span>

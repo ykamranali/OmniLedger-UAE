@@ -1,14 +1,25 @@
-import { NextResponse } from "next/server";
-import { invoicingStore } from "@/lib/store/invoicing-store";
+// OmniInvoice UAE - Production Invoices API Route
+// Enforces server-side authentication, company access scoping, and input validation
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "@/lib/auth/server-auth";
+import { InvoiceService } from "@/lib/services/invoice-service";
 
-// GET /api/v1/invoices
-export async function GET(request: Request) {
+// GET /api/v1/invoices - Filtered strictly by user's permitted companies
+export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(request);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "UNAUTHORIZED: Active session required." },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const companyId = searchParams.get("companyId") || undefined;
     const status = searchParams.get("status") || undefined;
 
-    let invoices = invoicingStore.getInvoices(companyId);
+    let invoices = await InvoiceService.getInvoices(session, companyId);
     if (status) {
       invoices = invoices.filter((i) => i.status === status);
     }
@@ -18,20 +29,28 @@ export async function GET(request: Request) {
       count: invoices.length,
       data: invoices,
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to retrieve invoices" },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to retrieve invoices";
+    const status = message.includes("UNAUTHORIZED") ? 403 : 500;
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }
 
-// POST /api/v1/invoices
-export async function POST(request: Request) {
+// POST /api/v1/invoices - Creates draft with server-side tax recalculation & company authorization
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const session = await getServerSession(request);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: "UNAUTHORIZED: Active session required." },
+        { status: 401 }
+      );
+    }
 
-    if (!body.companyId || !body.customerId || !body.rawLines || body.rawLines.length === 0) {
+    const body = await request.json();
+    const lines = body.rawLines || body.lines;
+
+    if (!body.companyId || !body.customerId || !lines || lines.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -41,28 +60,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const newInvoice = invoicingStore.createInvoice({
+    const newInvoice = await InvoiceService.createDraft(session, {
       companyId: body.companyId,
       customerId: body.customerId,
       invoiceType: body.invoiceType,
-      issueDate: body.issueDate || new Date().toISOString().split("T")[0],
-      dueDate: body.dueDate || new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0],
+      issueDate: body.issueDate,
+      dueDate: body.dueDate,
       notes: body.notes,
-      rawLines: body.rawLines,
+      currency: body.currency || "AED",
+      lines,
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Invoice draft created successfully with sequential numbering",
+        message: "Invoice draft created successfully with server-verified tax calculations",
         data: newInvoice,
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to create invoice" },
-      { status: 422 }
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to create invoice";
+    const status = message.includes("UNAUTHORIZED") ? 403 : 422;
+    return NextResponse.json({ success: false, error: message }, { status });
   }
 }
