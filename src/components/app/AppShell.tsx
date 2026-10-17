@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { appConfig } from "@/lib/config/app-config";
 import { OmniLedgerLogo } from "@/components/brand/OmniLedgerLogo";
-import { invoicingStore, UserModel } from "@/lib/store/invoicing-store";
+import { invoicingStore, UserModel, CompanyModel } from "@/lib/store/invoicing-store";
 import {
   FileCheck2,
   LayoutDashboard,
@@ -39,11 +39,48 @@ export function AppShell({ children }: AppShellProps) {
 
   // Current session & access control
   const currentUser = invoicingStore.getCurrentUser();
-  const accessibleCompanies = invoicingStore.getAccessibleCompanies();
+  const [accessibleCompanies, setAccessibleCompanies] = useState<CompanyModel[]>(
+    invoicingStore.getAccessibleCompanies()
+  );
   const [selectedCompanyId, setSelectedCompanyId] = useState(
     accessibleCompanies[0]?.id || "comp-dxb-01"
   );
   const [isArabic, setIsArabic] = useState(false);
+
+  useEffect(() => {
+    // Restore selected company from localStorage if available
+    const savedId = typeof window !== "undefined" ? localStorage.getItem("omni_selected_company") : null;
+    if (savedId) {
+      setSelectedCompanyId(savedId);
+    }
+
+    // Fresh query to database / API
+    fetch("/api/v1/companies")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setAccessibleCompanies(data.data);
+          for (const comp of data.data) {
+            if (!invoicingStore.getCompanyById(comp.id)) {
+              invoicingStore.registerCompany(comp);
+            }
+          }
+          if (savedId && data.data.some((c: CompanyModel) => c.id === savedId)) {
+            setSelectedCompanyId(savedId);
+          } else {
+            setSelectedCompanyId(data.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.error("[AppShell] Error fetching companies:", err));
+  }, []);
+
+  const handleSelectCompany = (id: string) => {
+    setSelectedCompanyId(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("omni_selected_company", id);
+    }
+  };
 
   const selectedCompany =
     accessibleCompanies.find((c) => c.id === selectedCompanyId) ||
@@ -146,7 +183,7 @@ export function AppShell({ children }: AppShellProps) {
                 <div className="relative">
                   <select
                     value={selectedCompanyId}
-                    onChange={(e) => setSelectedCompanyId(e.target.value)}
+                    onChange={(e) => handleSelectCompany(e.target.value)}
                     className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-8 text-xs font-bold text-slate-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-600"
                   >
                     {accessibleCompanies.map((c) => (

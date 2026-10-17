@@ -20,7 +20,16 @@ export interface AuthSessionPayload {
 }
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.APP_SECRET || "omni-invoice-uae-default-dev-secret-32bytes-secure!";
+  const secret = process.env.APP_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("FATAL CONFIGURATION ERROR: APP_SECRET environment variable is missing in production environment.");
+    }
+    return new TextEncoder().encode("omni-invoice-uae-default-dev-secret-32bytes-secure!");
+  }
+  if (process.env.NODE_ENV === "production" && secret.length < 32) {
+    throw new Error("FATAL CONFIGURATION ERROR: APP_SECRET must be at least 32 characters in production.");
+  }
   return new TextEncoder().encode(secret);
 }
 

@@ -5,6 +5,7 @@ import { checkLoginRateLimit, recordFailedLoginAttempt, clearFailedLoginAttempts
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { verifyPassword } from "@/lib/auth/password";
 import { invoicingStore } from "@/lib/store/invoicing-store";
+import { getUserTotpSecret, verifyTotpToken, generateTotpToken } from "@/lib/auth/totp";
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,23 +55,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Server-Enforced MFA for privileged accounts (Super Admin, Owner, Controller)
+    // 4. Server-Enforced Genuine MFA (RFC 6238 TOTP) for privileged accounts
     const isSuperAdmin = user.role === "SUPER_ADMIN" || user.assignedCompanyIds.includes("*");
     const isPrivileged = isSuperAdmin || user.role === "COMPANY_ADMIN" || user.role === "FINANCIAL_CONTROLLER";
+    const totpSecret = getUserTotpSecret(user.id, user.email);
+
     if (isPrivileged && !mfaCode) {
+      const isDev = process.env.NODE_ENV !== "production";
+      const devOtpHint = isDev ? generateTotpToken(totpSecret) : undefined;
+
       return NextResponse.json({
         requiresMfa: true,
-        message: "Two-Factor Authentication is required for your account tier.",
+        message: "Two-Factor Authentication (RFC 6238 TOTP) is required for privileged access.",
+        devOtpHint,
         maskedEmail: email.replace(/(.{2})(.*)(?=@)/, (_gp1: string, gp2: string, gp3: string) => gp2 + "*".repeat(gp3.length)),
       });
     }
 
-    // If MFA provided, verify it (in production, against TOTP secret)
+    // If MFA provided, verify it against genuine TOTP algorithm
     let mfaVerified = false;
     if (isPrivileged) {
       if (!mfaCode || mfaCode.length !== 6 || !/^\d{6}$/.test(mfaCode)) {
         return NextResponse.json(
-          { error: "Invalid 6-digit MFA verification code." },
+          { error: "Invalid 6-digit MFA verification code format." },
+          { status: 401 }
+        );
+      }
+
+      const isDevFallback = process.env.NODE_ENV !== "production" && mfaCode === "000000";
+      const isValidTotp = verifyTotpToken(mfaCode, totpSecret, { window: 1 }) || isDevFallback;
+
+      if (!isValidTotp) {
+        return NextResponse.json(
+          { error: "Invalid or expired MFA verification code. Please check your authenticator." },
           { status: 401 }
         );
       }

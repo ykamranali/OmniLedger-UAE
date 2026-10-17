@@ -42,8 +42,33 @@ function CheckoutContent() {
   const [cardCvv, setCardCvv] = useState("421");
   const [cardHolder, setCardHolder] = useState("Saeed Al-Maktoum");
 
+  const [paymentGateway, setPaymentGateway] = useState<"paypal" | "card">("paypal");
   const [receiptRef, setReceiptRef] = useState("RCP-2026-90412");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Check if returning from PayPal approval
+  React.useEffect(() => {
+    const statusParam = searchParams.get("status");
+    const orderIdParam = searchParams.get("orderId");
+    if (statusParam === "APPROVED") {
+      setIsProcessing(true);
+      if (orderIdParam) {
+        setReceiptRef(orderIdParam);
+        fetch("/api/v1/payments/paypal/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: orderIdParam }),
+        })
+          .finally(() => {
+            setIsProcessing(false);
+            setIsSuccess(true);
+          });
+      } else {
+        setIsProcessing(false);
+        setIsSuccess(true);
+      }
+    }
+  }, [searchParams]);
 
   const plan =
     appConfig.subscriptionPlans.find((p) => p.id === selectedPlanId) ||
@@ -59,6 +84,37 @@ function CheckoutContent() {
     setIsProcessing(true);
     setErrorMessage(null);
 
+    if (paymentGateway === "paypal") {
+      try {
+        const res = await fetch("/api/v1/payments/paypal/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            planId: plan.id,
+            billingCycle,
+            companyName,
+            customerEmail: email,
+            amountAed: grandTotal,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.checkoutUrl) {
+          setErrorMessage(data.error || "Failed to initiate PayPal checkout session.");
+          setIsProcessing(false);
+          return;
+        }
+
+        // Redirect to PayPal approval URL
+        window.location.href = data.checkoutUrl;
+        return;
+      } catch {
+        setErrorMessage("Network error connecting to PayPal gateway. Please retry.");
+        setIsProcessing(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetch("/api/v1/subscriptions/checkout", {
         method: "POST",
@@ -69,7 +125,7 @@ function CheckoutContent() {
           companyName,
           email,
           trn,
-          paymentMethod: "TEST_UAE_GATEWAY",
+          paymentMethod: "DIRECT_CARD",
         }),
       });
 
@@ -314,51 +370,101 @@ function CheckoutContent() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="sm:col-span-2">
-                        <label className="block font-bold text-slate-700 mb-1">Card Number (Visa / Mastercard / AMEX)</label>
-                        <input
-                          type="text"
-                          required
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-mono font-bold text-slate-900 tracking-wider"
-                        />
+                    {/* Gateway Selector */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentGateway("paypal")}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          paymentGateway === "paypal"
+                            ? "border-[#0F2B5C] bg-blue-50/80 ring-2 ring-blue-900/10 shadow-xs"
+                            : "border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="font-black text-slate-900 flex items-center justify-between">
+                          <span className="tracking-tight text-sm"><strong className="text-[#003087]">Pay</strong><strong className="text-[#0079C1]">Pal</strong></span>
+                          <span className="text-[9px] bg-blue-100 text-blue-900 px-1.5 py-0.2 rounded font-black uppercase">Official</span>
+                        </div>
+                        <div className="text-[10px] text-slate-600 mt-1 font-medium">
+                          PayPal balance, credit card, or debit card.
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPaymentGateway("card")}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          paymentGateway === "card"
+                            ? "border-[#0F2B5C] bg-blue-50/80 ring-2 ring-blue-900/10 shadow-xs"
+                            : "border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="font-bold text-slate-900 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-slate-700" /> Direct Card</span>
+                        </div>
+                        <div className="text-[10px] text-slate-600 mt-1 font-medium">
+                          Visa, Mastercard, or AMEX.
+                        </div>
+                      </button>
+                    </div>
+
+                    {paymentGateway === "paypal" ? (
+                      <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200 text-blue-950 space-y-1.5">
+                        <div className="font-bold flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                          <span>PayPal Secure SaaS Billing</span>
+                        </div>
+                        <p className="text-[11px] text-slate-600">
+                          You will be redirected to PayPal to authorize your subscription securely. No credit card details are stored on our servers.
+                        </p>
                       </div>
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">Cardholder Name</label>
-                        <input
-                          type="text"
-                          required
-                          value={cardHolder}
-                          onChange={(e) => setCardHolder(e.target.value)}
-                          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-900"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">Expiry</label>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="sm:col-span-2">
+                          <label className="block font-bold text-slate-700 mb-1">Card Number (Visa / Mastercard / AMEX)</label>
                           <input
                             type="text"
                             required
-                            value={cardExpiry}
-                            onChange={(e) => setCardExpiry(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-mono font-bold text-slate-900"
+                            value={cardNumber}
+                            onChange={(e) => setCardNumber(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-mono font-bold text-slate-900 tracking-wider"
                           />
                         </div>
                         <div>
-                          <label className="block font-bold text-slate-700 mb-1">CVV</label>
+                          <label className="block font-bold text-slate-700 mb-1">Cardholder Name</label>
                           <input
-                            type="password"
-                            maxLength={4}
+                            type="text"
                             required
-                            value={cardCvv}
-                            onChange={(e) => setCardCvv(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-mono font-bold text-slate-900"
+                            value={cardHolder}
+                            onChange={(e) => setCardHolder(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-900"
                           />
                         </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">Expiry</label>
+                            <input
+                              type="text"
+                              required
+                              value={cardExpiry}
+                              onChange={(e) => setCardExpiry(e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-mono font-bold text-slate-900"
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-bold text-slate-700 mb-1">CVV</label>
+                            <input
+                              type="password"
+                              maxLength={4}
+                              required
+                              value={cardCvv}
+                              onChange={(e) => setCardCvv(e.target.value)}
+                              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs font-mono font-bold text-slate-900"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </form>
               </div>
@@ -429,7 +535,11 @@ function CheckoutContent() {
                   >
                     <Lock className="h-4 w-4" />
                     <span>
-                      {isProcessing ? "Authorizing Payment..." : `Authorize & Pay AED ${grandTotal.toFixed(2)}`}
+                      {isProcessing
+                        ? (paymentGateway === "paypal" ? "Connecting to PayPal..." : "Authorizing Payment...")
+                        : paymentGateway === "paypal"
+                          ? `Continue to PayPal • AED ${grandTotal.toFixed(2)}`
+                          : `Authorize & Pay AED ${grandTotal.toFixed(2)}`}
                     </span>
                   </button>
 

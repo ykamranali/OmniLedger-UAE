@@ -19,7 +19,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("kamran.a@ramtechuae.com");
   const [password, setPassword] = useState("SuperAdmin2026!");
-  const [mfaCode, setMfaCode] = useState("892104");
+  const [mfaCode, setMfaCode] = useState("");
   const [showMfa, setShowMfa] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +96,9 @@ export default function LoginPage() {
 
       if (data.requiresMfa) {
         setShowMfa(true);
+        if (data.devOtpHint) {
+          setMfaCode(data.devOtpHint);
+        }
         setLoading(false);
         return;
       }

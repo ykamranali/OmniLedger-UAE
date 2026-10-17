@@ -128,7 +128,7 @@ export default function AdminConsolePage() {
   };
 
   // Submit New Company
-  const handleRegisterCompany = (e: React.FormEvent) => {
+  const handleRegisterCompany = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (newCompTrn.length !== 15 || !newCompTrn.startsWith("100")) {
@@ -136,30 +136,42 @@ export default function AdminConsolePage() {
       return;
     }
 
-    const created = invoicingStore.registerCompany({
-      tenantId: "tenant-omni-01",
-      legalNameEn: newCompNameEn,
-      legalNameAr: newCompNameAr || newCompNameEn,
-      tradingName: newCompNameEn,
-      trn: newCompTrn,
-      crn: newCompCrn || `CR-${Date.now().toString().slice(-5)}`,
-      currency: "AED",
-      streetAddress: `Commercial Tower, ${newCompCity}`,
-      city: newCompCity,
-      emirate: newCompEmirate,
-      countryCode: "AE",
-      contactEmail: newCompEmail || "finance@clientcompany.ae",
-      contactPhone: "+971 4 000 0000",
-      invoiceSequencePrefix: newCompPrefix.endsWith("-") ? newCompPrefix : `${newCompPrefix}-`,
-    });
+    try {
+      const res = await fetch("/api/v1/companies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          legalNameEn: newCompNameEn,
+          legalNameAr: newCompNameAr || newCompNameEn,
+          tradingName: newCompNameEn,
+          trn: newCompTrn,
+          crn: newCompCrn || `CR-${Date.now().toString().slice(-5)}`,
+          currency: "AED",
+          streetAddress: `Commercial Tower, ${newCompCity}`,
+          city: newCompCity,
+          emirate: newCompEmirate,
+          contactEmail: newCompEmail || "finance@clientcompany.ae",
+          contactPhone: "+971 4 000 0000",
+          invoiceSequencePrefix: newCompPrefix.endsWith("-") ? newCompPrefix : `${newCompPrefix}-`,
+        }),
+      });
 
-    setShowAddCompanyModal(false);
-    showAlert(`Legal Entity ${created.legalNameEn} registered. You can now assign users to it.`);
-    // Reset form
-    setNewCompNameEn("");
-    setNewCompNameAr("");
-    setNewCompTrn("100");
-    triggerRefresh();
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to register company.");
+        return;
+      }
+
+      setShowAddCompanyModal(false);
+      showAlert(`Legal Entity ${data.data.legalNameEn} registered successfully and persisted.`);
+      // Reset form
+      setNewCompNameEn("");
+      setNewCompNameAr("");
+      setNewCompTrn("100");
+      triggerRefresh();
+    } catch {
+      alert("Error submitting company registration request.");
+    }
   };
 
   // Toggle user status

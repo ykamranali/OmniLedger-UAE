@@ -57,7 +57,7 @@ export class ApiKeyService {
     const plaintextKey = `${prefix}_${rawSecret.slice(6)}`;
     const keyHash = this.hashKey(plaintextKey);
 
-    const id = `apk-${Date.now().toString().slice(-6)}`;
+    const id = `apk-${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
     const nowIso = new Date().toISOString();
 
     memoryApiKeyRegistry.set(keyHash, {

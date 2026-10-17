@@ -5,6 +5,7 @@ import { validatePasswordStrength, hashPassword } from "@/lib/auth/password";
 import { validateUaeTrn } from "@/lib/compliance/trn-validator";
 import { createSessionToken, getSessionCookieConfig } from "@/lib/auth/session";
 import { invoicingStore } from "@/lib/store/invoicing-store";
+import { CompanyService } from "@/lib/services/company-service";
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,11 +63,10 @@ export async function POST(req: NextRequest) {
     // 6. Hash password with bcrypt
     const passwordHash = await hashPassword(password);
 
-    // 7. Register Company in Store
-    const companyId = `comp-${Date.now().toString().slice(-4)}`;
-    const newCompany = invoicingStore.registerCompany({
-      id: companyId,
-      tenantId: `tenant-${Date.now().toString().slice(-4)}`,
+    // 7. Register Company via CompanyService (PostgreSQL / Prisma with resilient persistence)
+    const tenantId = `tenant-${Date.now().toString().slice(-4)}`;
+    const { company: newCompany, persistedToDb } = await CompanyService.registerCompany({
+      tenantId,
       legalNameEn: companyName,
       legalNameAr: companyName,
       tradingName: companyName,
@@ -76,7 +76,6 @@ export async function POST(req: NextRequest) {
       streetAddress: "Commercial District",
       city,
       emirate,
-      countryCode: "AE",
       contactEmail: email,
       contactPhone: phone,
       invoiceSequencePrefix: "INV-",
@@ -91,7 +90,7 @@ export async function POST(req: NextRequest) {
       assignedCompanyIds: [newCompany.id],
       status: "ACTIVE",
       phoneNumber: phone,
-      notes: `Registered via portal with plan ${plan}`,
+      notes: `Registered via portal with plan ${plan} (DB: ${persistedToDb ? "PostgreSQL" : "LocalPersistence"})`,
     });
 
     // 9. Generate Authenticated Session Token

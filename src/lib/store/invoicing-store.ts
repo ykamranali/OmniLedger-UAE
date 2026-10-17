@@ -559,10 +559,10 @@ class InvoicingDataStore {
     return this.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
   }
 
-  public createUser(user: Omit<UserModel, "id" | "createdAt">): UserModel {
+  public createUser(user: Omit<UserModel, "id" | "createdAt"> & { id?: string }): UserModel {
     const newUser: UserModel = {
       ...user,
-      id: `usr-${Date.now().toString().slice(-5)}`,
+      id: user.id || `usr-${Date.now().toString().slice(-5)}`,
       createdAt: new Date().toISOString(),
     };
     this.users.unshift(newUser);
@@ -608,7 +608,7 @@ class InvoicingDataStore {
   public getAccessibleCompanies(userId?: string): CompanyModel[] {
     const uid = userId || this.currentUserId;
     const user = this.users.find((u) => u.id === uid);
-    if (!user) return this.companies;
+    if (!user) return [];
 
     // Super Admin has unrestricted access to all legal entities
     if (user.role === "SUPER_ADMIN" || user.assignedCompanyIds.includes("*")) {
